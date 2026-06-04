@@ -6,11 +6,16 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "alembic>=1.18.4",
+    "emails>=1.1.2",
     "fastapi>=0.136.3",
+    "jinja2>=3.1.6",
     "psycopg2-binary>=2.9.12",
+    "pwdlib[argon2,bcrypt]>=0.3.0",
     "pydantic-settings>=2.14.1",
     "pydantic[email]>=2.13.4",
     "pyjwt>=2.13.0",
+    "python-multipart>=0.0.30",
+    "sentry-sdk>=2.61.1",
     "sqlmodel>=0.0.38",
     "uvicorn>=0.48.0",
 ]

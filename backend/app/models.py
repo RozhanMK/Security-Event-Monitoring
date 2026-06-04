@@ -1,9 +1,13 @@
 import uuid
 from datetime import datetime, timezone
+from enum import StrEnum
 
 from pydantic import EmailStr
 from sqlalchemy import DateTime
 from sqlmodel import Field, Relationship, SQLModel
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import Column
+
 
 def get_datetime_utc() -> datetime:
     return datetime.now(timezone.utc)
@@ -37,7 +41,7 @@ class User(UserBase, table=True):
         default_factory=get_datetime_utc,
         sa_type=DateTime(timezone=True),  # type: ignore
     )
-    speedtests: list["SpeedTest"] = Relationship(back_populates="user", cascade_delete=True)
+    security_events: list["SecurityEvent"] = Relationship(back_populates="user", cascade_delete=True)
 
 
 # Properties to return via API, id is always required
@@ -51,38 +55,59 @@ class UsersPublic(SQLModel):
     count: int
 
 
-# class SpeedTestBase(SQLModel):
-#     download_speed: float | None = Field(default=None, ge=0)
-#     upload_speed: float | None = Field(default=None, ge=0)
-#     ping: float | None = Field(default=None, ge=0)
+class Severity(StrEnum):
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+
+class SecurityEvent(SQLModel, table=True):
+    id: uuid.UUID = Field(
+        default_factory=uuid.uuid4,
+        primary_key=True,
+    )
+    event_type: str
+    severity: Severity
+    user_id: uuid.UUID | None = Field(
+        default=None,
+        foreign_key="user.id",
+    )
+    user: User | None = Relationship(
+        back_populates="security_events"
+    )
+    ip: str | None = None
+    source: str = "api"
+    event_data: dict = Field(
+        default_factory=dict,
+        sa_column=Column(JSONB),
+    )
+    created_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),
+    )
+
+class SecurityEventCreate(SQLModel):
+    event_type: str
+    severity: Severity
+    ip: str | None = None
+    source: str = "api"
+    event_data: dict = Field(default_factory=dict)
 
 
-
-# class SpeedTestCreate(SpeedTestBase):
-#     pass
-
-
-# class SpeedTest(SpeedTestBase, table=True):
-#     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-#     created_at: datetime | None = Field(
-#         default_factory=get_datetime_utc,
-#         sa_type=DateTime(timezone=True),  # type: ignore
-#     )
-#     user_id: uuid.UUID = Field(
-#         foreign_key="user.id", nullable=False, ondelete="CASCADE"
-#     )
-#     user: User | None = Relationship(back_populates="speedtests")
+class SecurityEventPublic(SQLModel):
+    id: uuid.UUID
+    event_type: str
+    severity: Severity
+    user_id: uuid.UUID | None
+    ip: str | None
+    source: str
+    event_data: dict
+    created_at: datetime
 
 
-# class SpeedTestPublic(SpeedTestBase):
-#     id: uuid.UUID
-#     user_id: uuid.UUID
-#     created_at: datetime | None = None
+class SecurityEventsPublic(SQLModel):
+    data: list[SecurityEventPublic]
+    count: int
 
-
-# class SpeedTestsPublic(SQLModel):
-#     data: list[SpeedTestPublic]
-#     count: int
 
 # Generic message
 class Message(SQLModel):

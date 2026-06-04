@@ -4,7 +4,7 @@ from typing import Any
 from sqlmodel import Session, select
 
 from app.core.security import get_password_hash, verify_password
-from app.models import User, UserRegister, UserUpdate
+from app.models import User, UserRegister, UserUpdate, SecurityEventCreate, SecurityEvent
 
 
 def create_user(*, session: Session, user_create: UserRegister) -> User:
@@ -59,3 +59,19 @@ def authenticate(*, session: Session, email: str, password: str) -> User | None:
         session.refresh(db_user)
     return db_user
 
+
+def create_event(*, session: Session, event_in: SecurityEventCreate, user_id=None):
+    db_event = SecurityEvent(
+        event_type=event_in.event_type,
+        severity=event_in.severity,
+        user_id=user_id,
+        ip=event_in.ip,
+        source=event_in.source,
+        event_data=event_in.event_data,
+    )
+
+    session.add(db_event)
+    session.commit()
+    session.refresh(db_event)
+
+    return db_event

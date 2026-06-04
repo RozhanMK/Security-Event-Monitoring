@@ -1,0 +1,29 @@
+from typing import Any
+
+from fastapi import APIRouter, Request
+
+from app import crud
+from app.api.deps import (
+    CurrentUser,
+    SessionDep
+)
+from app.models import (
+    SecurityEventCreate,
+    SecurityEventPublic
+)
+
+router = APIRouter(prefix="/events", tags=["events"])
+
+
+@router.post("/", response_model=SecurityEventPublic)
+def create_security_event(session: SessionDep, request: Request, current_user: CurrentUser, event_in: SecurityEventCreate,
+) -> Any:
+    ip = event_in.ip or request.client.host
+
+    event_in.ip = ip
+
+    return crud.create_event(
+        session=session,
+        event_in=event_in,
+        user_id=current_user.id,
+    )
