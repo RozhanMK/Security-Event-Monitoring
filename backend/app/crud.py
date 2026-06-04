@@ -4,7 +4,7 @@ from typing import Any
 from sqlmodel import Session, select
 
 from app.core.security import get_password_hash, verify_password
-from app.models import User, UserRegister, UserUpdate, SpeedTest, SpeedTestCreate
+from app.models import User, UserRegister, UserUpdate
 
 
 def create_user(*, session: Session, user_create: UserRegister) -> User:
@@ -59,10 +59,3 @@ def authenticate(*, session: Session, email: str, password: str) -> User | None:
         session.refresh(db_user)
     return db_user
 
-
-def create_speed_test(*, session: Session, item_in: SpeedTestCreate, user_id: uuid.UUID) -> SpeedTest:
-    db_item = SpeedTest.model_validate(item_in, update={"user_id": user_id})
-    session.add(db_item)
-    session.commit()
-    session.refresh(db_item)
-    return db_item

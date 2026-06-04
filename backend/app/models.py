@@ -51,42 +51,38 @@ class UsersPublic(SQLModel):
     count: int
 
 
-# Shared properties
-class SpeedTestBase(SQLModel):
-    download_speed: float | None = Field(default=None, ge=0)
-    upload_speed: float | None = Field(default=None, ge=0)
-    ping: float | None = Field(default=None, ge=0)
+# class SpeedTestBase(SQLModel):
+#     download_speed: float | None = Field(default=None, ge=0)
+#     upload_speed: float | None = Field(default=None, ge=0)
+#     ping: float | None = Field(default=None, ge=0)
 
 
 
-# Properties to receive on speedtest creation
-class SpeedTestCreate(SpeedTestBase):
-    pass
+# class SpeedTestCreate(SpeedTestBase):
+#     pass
 
 
-# Database model, database table inferred from class name
-class SpeedTest(SpeedTestBase, table=True):
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    created_at: datetime | None = Field(
-        default_factory=get_datetime_utc,
-        sa_type=DateTime(timezone=True),  # type: ignore
-    )
-    user_id: uuid.UUID = Field(
-        foreign_key="user.id", nullable=False, ondelete="CASCADE"
-    )
-    user: User | None = Relationship(back_populates="speedtests")
+# class SpeedTest(SpeedTestBase, table=True):
+#     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+#     created_at: datetime | None = Field(
+#         default_factory=get_datetime_utc,
+#         sa_type=DateTime(timezone=True),  # type: ignore
+#     )
+#     user_id: uuid.UUID = Field(
+#         foreign_key="user.id", nullable=False, ondelete="CASCADE"
+#     )
+#     user: User | None = Relationship(back_populates="speedtests")
 
 
-# Properties to return via API, id is always required
-class SpeedTestPublic(SpeedTestBase):
-    id: uuid.UUID
-    user_id: uuid.UUID
-    created_at: datetime | None = None
+# class SpeedTestPublic(SpeedTestBase):
+#     id: uuid.UUID
+#     user_id: uuid.UUID
+#     created_at: datetime | None = None
 
 
-class SpeedTestsPublic(SQLModel):
-    data: list[SpeedTestPublic]
-    count: int
+# class SpeedTestsPublic(SQLModel):
+#     data: list[SpeedTestPublic]
+#     count: int
 
 # Generic message
 class Message(SQLModel):
