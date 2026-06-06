@@ -11,6 +11,7 @@ from app.models import (
     SecurityEventCreate,
     SecurityEventPublic
 )
+from app.core.redis import redis_client
 
 router = APIRouter(prefix="/events", tags=["events"])
 
@@ -27,3 +28,9 @@ def create_security_event(session: SessionDep, request: Request, current_user: C
         event_in=event_in,
         user_id=current_user.id,
     )
+
+@router.get("/redis-test")
+async def redis_test():
+    await redis_client.set("test", "hello")
+    value = await redis_client.get("test")
+    return {"value": value}
