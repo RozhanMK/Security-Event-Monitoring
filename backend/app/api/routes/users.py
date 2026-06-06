@@ -5,7 +5,8 @@ from fastapi import APIRouter, HTTPException
 from app import crud
 from app.api.deps import (
     CurrentUser,
-    SessionDep
+    SessionDep,
+    RateLimitDep
 )
 from app.core.security import get_password_hash, verify_password
 from app.models import (
@@ -20,7 +21,7 @@ router = APIRouter(prefix="/users", tags=["users"])
 
 @router.patch("/me", response_model=UserPublic)
 def update_user_me(
-    *, session: SessionDep, user_in: UserUpdate, current_user: CurrentUser
+    *, session: SessionDep, user_in: UserUpdate, current_user: CurrentUser, rate_limit: RateLimitDep
 ) -> Any:
     """
     Update own user.
@@ -42,7 +43,7 @@ def update_user_me(
 
 @router.patch("/me/password", response_model=Message)
 def update_password_me(
-    *, session: SessionDep, body: UpdatePassword, current_user: CurrentUser
+    *, session: SessionDep, body: UpdatePassword, current_user: CurrentUser, rate_limit: RateLimitDep
 ) -> Any:
     """
     Update own password.
@@ -80,7 +81,7 @@ def delete_user_me(session: SessionDep, current_user: CurrentUser) -> Any:
 
 
 @router.post("/signup", response_model=UserPublic)
-def register_user(session: SessionDep, user_in: UserRegister) -> Any:
+def register_user(rate_limit: RateLimitDep, session: SessionDep, user_in: UserRegister) -> Any:
     """
     Create new user without the need to be logged in.
     """

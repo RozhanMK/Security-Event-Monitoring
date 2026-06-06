@@ -2,7 +2,7 @@ from collections.abc import Generator
 from typing import Annotated
 
 import jwt
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
 from jwt.exceptions import InvalidTokenError
 from pydantic import ValidationError
@@ -12,6 +12,7 @@ from app.core import security
 from app.core.config import settings
 from app.core.db import engine
 from app.models import TokenPayload, User
+from app.rate_limiter import FixedWindowRateLimiter
 
 reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl=f"{settings.API_V1_STR}/login/access-token"
@@ -45,3 +46,14 @@ def get_current_user(session: SessionDep, token: TokenDep) -> User:
     return user
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
+def rate_limit(scope: str = "ip", limit: int = 5, window: int = 60):
+    limiter = FixedWindowRateLimiter(limit, window, scope)
+
+    async def dependency(request: Request, user: CurrentUser | None = None):
+        key = request.client.host if scope == "ip" else str(user.id)
+        await limiter.check(key)
+
+    return dependency
+
+RateLimitDep = Annotated[None, Depends(rate_limit("ip", 5, 60))]

@@ -6,7 +6,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.security import OAuth2PasswordRequestForm
 
 from app import crud
-from app.api.deps import CurrentUser, SessionDep
+from app.api.deps import CurrentUser, SessionDep, RateLimitDep
 from app.core import security
 from app.core.config import settings
 from app.models import Message, NewPassword, Token, UserPublic, UserUpdate
@@ -22,7 +22,7 @@ router = APIRouter(tags=["login"])
 
 @router.post("/login/access-token")
 def login_access_token(
-    session: SessionDep, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
+    rate_limit: RateLimitDep, session: SessionDep, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
 ) -> Token:
     """
     OAuth2 compatible token login, get an access token for future requests
@@ -42,7 +42,7 @@ def login_access_token(
 
 
 @router.post("/login/test-token", response_model=UserPublic)
-def test_token(current_user: CurrentUser) -> Any:
+def test_token(rate_limit: RateLimitDep, current_user: CurrentUser) -> Any:
     """
     Test access token
     """
@@ -50,7 +50,7 @@ def test_token(current_user: CurrentUser) -> Any:
 
 
 @router.post("/password-recovery/{email}")
-def recover_password(email: str, session: SessionDep) -> Message:
+def recover_password(rate_limit: RateLimitDep, email: str, session: SessionDep) -> Message:
     """
     Password Recovery
     """
@@ -74,7 +74,7 @@ def recover_password(email: str, session: SessionDep) -> Message:
 
 
 @router.post("/reset-password/")
-def reset_password(session: SessionDep, body: NewPassword) -> Message:
+def reset_password(rate_limit: RateLimitDep, session: SessionDep, body: NewPassword) -> Message:
     """
     Reset password
     """

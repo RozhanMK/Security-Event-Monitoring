@@ -5,7 +5,8 @@ from fastapi import APIRouter, Request
 from app import crud
 from app.api.deps import (
     CurrentUser,
-    SessionDep
+    SessionDep,
+    RateLimitDep
 )
 from app.models import (
     SecurityEventCreate,
@@ -17,7 +18,7 @@ router = APIRouter(prefix="/events", tags=["events"])
 
 
 @router.post("/", response_model=SecurityEventPublic)
-def create_security_event(session: SessionDep, request: Request, current_user: CurrentUser, event_in: SecurityEventCreate,
+def create_security_event(rate_limit: RateLimitDep, session: SessionDep, request: Request, current_user: CurrentUser, event_in: SecurityEventCreate,
 ) -> Any:
     ip = event_in.ip or request.client.host
 
@@ -30,7 +31,7 @@ def create_security_event(session: SessionDep, request: Request, current_user: C
     )
 
 @router.get("/redis-test")
-async def redis_test():
+async def redis_test(rate_limit: RateLimitDep):
     await redis_client.set("test", "hello")
     value = await redis_client.get("test")
     return {"value": value}
