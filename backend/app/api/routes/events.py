@@ -26,7 +26,11 @@ def create_security_event(rate_limit: RateLimitDep, session: SessionDep, request
 
     return crud.create_event(
         session=session,
-        event_in=event_in,
+        event_type=event_in.event_type,
+        severity=event_in.severity,
+        source=event_in.source,
+        event_data=event_in.event_data,
+        ip=event_in.ip,
         user_id=current_user.id,
     )
 
