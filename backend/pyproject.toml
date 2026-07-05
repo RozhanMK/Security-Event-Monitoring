@@ -18,5 +18,5 @@ dependencies = [
     "redis>=8.0.0",
     "sentry-sdk>=2.61.1",
     "sqlmodel>=0.0.38",
-    "uvicorn>=0.48.0",
+    "uvicorn[standard]>=0.48.0",
 ]

@@ -127,3 +127,15 @@ class TokenPayload(SQLModel):
 class NewPassword(SQLModel):
     token: str
     new_password: str = Field(min_length=8, max_length=128)
+
+class OutboxEvent(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+
+    event_type: str
+    payload: str
+
+    created_at: datetime = Field(
+        default_factory=datetime.utcnow
+    )
+
+    processed: bool = False

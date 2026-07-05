@@ -1,11 +1,11 @@
+import json
 import uuid
 from typing import Any
 
 from sqlmodel import Session, select
 
 from app.core.security import get_password_hash, verify_password
-from app.models import User, UserRegister, UserUpdate, Severity, SecurityEvent
-
+from app.models import User, UserRegister, UserUpdate, Severity, SecurityEvent, OutboxEvent
 
 def create_user(*, session: Session, user_create: UserRegister) -> User:
     db_obj = User.model_validate(
@@ -70,6 +70,20 @@ def create_event(*, session: Session, event_type: str, severity: Severity, sourc
         event_data=event_data,
     )
 
+    outbox_event = OutboxEvent(
+        event_type="security_event",
+        payload=json.dumps(
+            {
+                "event_type": event_type,
+                "user_id": str(user_id),
+                "severity": severity.value,
+                "source": source,
+                "event_data": event_data,
+            }
+        ),
+    )
+
+    session.add(outbox_event)
     session.add(db_event)
     session.commit()
     session.refresh(db_event)

@@ -1,6 +1,9 @@
 from typing import Any
+import json
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, WebSocket, WebSocketDisconnect
+from sqlmodel import select
+from sqlmodel import Session
 
 from app import crud
 from app.api.deps import (
@@ -10,10 +13,13 @@ from app.api.deps import (
 )
 from app.models import (
     SecurityEventCreate,
-    SecurityEventPublic
+    SecurityEventPublic, 
+    SecurityEvent
 )
 from app.core.redis import redis_client
-
+from app.core.connection_manager import manager
+from app.api.deps import get_current_user_ws
+from app.core.db import engine
 router = APIRouter(prefix="/events", tags=["events"])
 
 
@@ -33,6 +39,47 @@ def create_security_event(rate_limit: RateLimitDep, session: SessionDep, request
         ip=event_in.ip,
         user_id=current_user.id,
     )
+
+@router.websocket("/ws")
+async def events_ws(websocket: WebSocket):
+
+    token = websocket.query_params.get("token")
+
+    if not token:
+        await websocket.close(code=1008)
+        return
+
+    with Session(engine) as session:
+        print("test1")
+        user = await get_current_user_ws(session, token)
+        print("test2")
+
+    if not user:
+        await websocket.close(code=1008)
+        return
+    
+    await websocket.accept()
+
+    await manager.connect(str(user.id), websocket)
+
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(str(user.id), websocket)
+
+@router.get("/")
+async def get_events(session: SessionDep, current_user: CurrentUser, limit: int = 100):
+    statement = (
+        select(SecurityEvent)
+        .where(SecurityEvent.user_id == current_user.id)
+        .order_by(SecurityEvent.created_at.desc())
+        .limit(limit)
+    )
+
+    events = session.exec(statement).all()
+
+    return events
 
 @router.get("/redis-test")
 async def redis_test(rate_limit: RateLimitDep):

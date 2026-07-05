@@ -47,11 +47,27 @@ def get_current_user(session: SessionDep, token: TokenDep) -> User:
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
 
+def decode_access_token(token: str) -> TokenPayload:
+    payload = jwt.decode(
+        token,
+        settings.SECRET_KEY,
+        algorithms=[security.ALGORITHM],
+    )
+    return TokenPayload(**payload)
+
+async def get_current_user_ws(session, token: str) -> User:
+    try:
+        token_data = decode_access_token(token)
+    except (InvalidTokenError, ValidationError):
+        return None
+
+    return session.get(User, token_data.sub)
+
 def rate_limit(scope: str = "ip", limit: int = 5, window: int = 60):
     limiter = FixedWindowRateLimiter(limit, window, scope)
 
-    async def dependency(request: Request, user: CurrentUser | None = None):
-        key = request.client.host if scope == "ip" else str(user.id)
+    async def dependency(request: Request):
+        key = request.client.host
         await limiter.check(key)
 
     return dependency

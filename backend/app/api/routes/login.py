@@ -2,7 +2,6 @@ from datetime import timedelta
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import HTMLResponse
 from fastapi.security import OAuth2PasswordRequestForm
 
 from app import crud
@@ -56,8 +55,7 @@ def login_access_token(
             severity=Severity.LOW,
             source=get_current_function_name(),
             event_data={"reason": reason},
-            ip=request.client.host,
-            user_id=user.id,
+            ip=request.client.host
         )
         raise HTTPException(status_code=400, detail="Incorrect email or password")
 
