@@ -128,6 +128,7 @@ class NewPassword(SQLModel):
     token: str
     new_password: str = Field(min_length=8, max_length=128)
 
+    
 class OutboxEvent(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
 
@@ -135,7 +136,8 @@ class OutboxEvent(SQLModel, table=True):
     payload: str
 
     created_at: datetime = Field(
-        default_factory=datetime.utcnow
+        default_factory=get_datetime_utc,  # Use the utility function instead
+        sa_type=DateTime(timezone=True),   # Specify timezone support
     )
 
     processed: bool = False

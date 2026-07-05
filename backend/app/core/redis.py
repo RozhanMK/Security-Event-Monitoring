@@ -25,7 +25,7 @@ async def redis_event_consumer():
             for message_id, fields in messages:
                 last_id = message_id
 
-                event = json.loads(fields[b"data"])
+                event = json.loads(fields["data"])
 
                 user_id = event["user_id"]
 

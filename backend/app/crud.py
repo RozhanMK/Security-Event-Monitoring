@@ -83,8 +83,7 @@ def create_event(*, session: Session, event_type: str, severity: Severity, sourc
         ),
     )
 
-    session.add(outbox_event)
-    session.add(db_event)
+    session.add_all([db_event, outbox_event])
     session.commit()
     session.refresh(db_event)
 
