@@ -26,8 +26,7 @@ async def process_outbox(session: Session, redis: Redis) -> int:
             await redis.xadd(
                 "events",
                 {
-                    "event_type": event.event_type,
-                    "payload": event.payload,
+                    "data": event.payload 
                 }
             )
 
