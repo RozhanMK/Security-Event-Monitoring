@@ -33,10 +33,12 @@ async def process_outbox(session: Session, redis: Redis) -> int:
             event.processed = True
             processed_count += 1
 
-        except Exception:
+        except Exception as e:
             # Redis unavailable, network issue, etc.
-            print("Error processing outbox event:", event.id)
-            break
+            # Log the error but continue processing other events
+            print(f"Error processing outbox event {event.id}: {e}")
+            # Don't break - continue processing remaining events
+            continue
 
     session.commit()
 
